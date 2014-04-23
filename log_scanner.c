@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pcre.h>
+#include <linux/inotify.h>
 
 void process_line(char *line)
 {
@@ -43,12 +44,6 @@ void process_line(char *line)
         return;
     }
      
-    if (rc == 0)
-    {
-        rc = 300/3;
-        printf("ovector only has room for %d captured substrings\n", rc - 1);
-    }
-     
      
     for (int i = 0; i < rc; i++)
     {
@@ -58,9 +53,9 @@ void process_line(char *line)
     }
 }
 
-int main(int argc, char **argv)
+void process_file(char *filename)
 {
-    FILE *fh = fopen("/var/log/apache2/error.log", "rt");
+    FILE *fh = fopen(filename, "rt");
 
     if (fh == NULL)
     {
@@ -74,6 +69,18 @@ int main(int argc, char **argv)
     {
         process_line(line);
     }
+}
+
+void inotify(char *filename)
+{
+
+}
+
+int main(int argc, char **argv)
+{
+    char *filename = "/var/log/apache2/error.log";
+
+    inotify(filename);
 
     return 0;
 }
