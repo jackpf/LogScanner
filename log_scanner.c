@@ -12,8 +12,10 @@
 bool file_exists(char *filename)
 {
     FILE *fh = fopen(filename, "r");
+    bool exists = fh != NULL;
+    fclose(fh);
 
-    return fh != NULL;
+    return exists;
 }
 
 void process_line(char *line)
@@ -59,7 +61,6 @@ void process_line(char *line)
         }
         printf("\n");
     } while (rc >= 0);
-    exit(0);
 }
 
 void process_file(char *filename)
@@ -76,6 +77,8 @@ void process_file(char *filename)
     while (fgets(line, sizeof line, fh) != NULL) {
         process_line(line);
     }
+
+    fclose (fh);
 }
 
 void inotify(char *filename, void (*callback)(char *))
