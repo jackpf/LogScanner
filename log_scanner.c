@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <pcre.h>
 #include <linux/inotify.h>
+#include "config.h"
 
 #define REGEX_GROUPS    (2)
 #define EVENT_SIZE      (sizeof (struct inotify_event))
@@ -74,7 +75,7 @@ void process_file(char *filename)
 
     char line[BUFSIZ];
 
-    while (fgets(line, sizeof line, fh) != NULL) {
+    while (fgets(line, BUFSIZ, fh) != NULL) {
         process_line(line);
     }
 
@@ -130,7 +131,7 @@ void inotify(char *filename, void (*callback)(char *))
 }
 
 int main(int argc, char **argv)
-{
+{parse();
     char *filename = "/home/s40admin/installs/error.log";
 
     inotify(filename, &process_file);
