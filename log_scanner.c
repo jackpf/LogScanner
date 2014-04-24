@@ -56,8 +56,8 @@ void process_line(char *line)
 
         printf("%s", line);
         for (int i = 0; i < rc; i++) {
-            char *substring_start = line + ovector[2*i];
-            int substring_length = ovector[2*i+1] - ovector[2*i];
+            char *substring_start = line + ovector[2 * i];
+            int substring_length = ovector[2 * i + 1] - ovector[2 * i];
             printf("%2d: %.*s\n", i, substring_length, substring_start);
         }
         printf("\n");
