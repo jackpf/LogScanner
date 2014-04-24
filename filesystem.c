@@ -9,14 +9,14 @@
 #define TAG_TYPE        1
 #define TAG_PID         2
 
-ln_callback _callback = NULL;
+static ln_callback _callback = NULL;
 
 void filesystem_set_ln_callback(ln_callback callback)
 {
     _callback = callback;
 }
 
-bool process_line(char *line)
+static bool process_line(char *line)
 {
     const char *pattern = "\\[(.*?)\\]";
     const char *error;
@@ -74,7 +74,7 @@ bool process_line(char *line)
     return snd;
 }
 
-void process_file(char *filename)
+static void process_file(char *filename)
 {
     if (!file_exists(filename)) {
         printf("File does not exist\n");

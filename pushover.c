@@ -1,14 +1,14 @@
 #include "common.h"
 #include "pushover.h"
 
-void init_string(struct string *s)
+static void init_string(struct string *s)
 {
     s->len = 0;
     s->ptr = malloc(s->len + 1);
     s->ptr[0] = '\0';
 }
 
-size_t curl_write(void *ptr, size_t size, size_t nmemb, struct string *s)
+static size_t curl_write(void *ptr, size_t size, size_t nmemb, struct string *s)
 {
     size_t new_len = s->len + size * nmemb;
     s->ptr = realloc(s->ptr, new_len + 1);

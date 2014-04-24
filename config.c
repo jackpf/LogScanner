@@ -1,7 +1,7 @@
 #include "common.h"
 #include "config.h"
 
-GHashTable *config;
+static GHashTable *config;
 
 void config_init(char *config_file)
 {
