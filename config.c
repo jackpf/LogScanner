@@ -1,10 +1,9 @@
+#include "common.h"
 #include "config.h"
-#include <stdbool.h>
-#include <glib.h>
 
 GHashTable *config;
 
-void config_parse(void)
+void config_init(void)
 {
     config = g_hash_table_new(g_str_hash, g_str_equal);
     yaml_parser_t parser;
@@ -14,7 +13,7 @@ void config_parse(void)
     yaml_parser_initialize(&parser);
 
     /* Set a file input. */
-    FILE *input = fopen("/home/s40admin/installs/config.yml", "rb");
+    FILE *input = fopen("/home/s40admin/installs/LogScanner/config.yml", "rb");
 
     yaml_parser_set_input_file(&parser, input);
 
@@ -29,8 +28,8 @@ void config_parse(void)
         if (event.type == YAML_SCALAR_EVENT) {
             type_ptr = key == NULL ? &key : &value;
 
-            *type_ptr = (char *) malloc(strlen(event.data.scalar.value) + 1);
-            strcpy(*type_ptr, event.data.scalar.value);
+            *type_ptr = (char *) malloc(strlen((const char *) event.data.scalar.value) + 1);
+            strcpy(*type_ptr, (const char *) event.data.scalar.value);
 
             if (value != NULL) {
                 g_hash_table_insert(config, key, value);

@@ -1,10 +1,8 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
+#include "common.h"
 #include <pcre.h>
 #include <linux/inotify.h>
 #include "config.h"
+#include "pushover.h"
 
 #define REGEX_GROUPS    (2)
 #define EVENT_SIZE      (sizeof (struct inotify_event))
@@ -134,7 +132,9 @@ void inotify(char *filename, void (*callback)(char *))
 
 int main(int argc, char **argv)
 {
-    config_parse();
+    config_init();
+
+    pushover_send(config_get("pushover_token"), config_get("pushover_user"), "LogScanner startup :D");
 
     inotify(config_get("file"), &process_file);
 
