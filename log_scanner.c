@@ -13,10 +13,13 @@
 bool file_exists(char *filename)
 {
     FILE *fh = fopen(filename, "r");
-    bool exists = fh != NULL;
-    fclose(fh);
-
-    return exists;
+    
+    if (fh != NULL) {
+        fclose(fh);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void process_line(char *line)
@@ -40,7 +43,6 @@ void process_line(char *line)
         printf("PCRE compilation failed at offset %d: %s\n", error_offset, error);
         exit(-1);
     }
-
 
     do {
         rc = pcre_exec(
@@ -131,10 +133,10 @@ void inotify(char *filename, void (*callback)(char *))
 }
 
 int main(int argc, char **argv)
-{parse();
-    char *filename = "/home/s40admin/installs/error.log";
+{
+    config_parse();
 
-    inotify(filename, &process_file);
+    inotify(config_get("file"), &process_file);
 
     return 0;
 }

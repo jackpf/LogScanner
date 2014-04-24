@@ -4,7 +4,7 @@
 
 GHashTable *config;
 
-void parse(void)
+void config_parse(void)
 {
     config = g_hash_table_new(g_str_hash, g_str_equal);
     yaml_parser_t parser;
@@ -18,31 +18,32 @@ void parse(void)
 
     yaml_parser_set_input_file(&parser, input);
 
+    char *key = NULL, *value = NULL, **type_ptr;
+
     do {
-        if (!yaml_parser_parse(&parser, &event)) {
-            printf("Parser error %d\n", parser.error);
+        if (!yaml_parser_parse(&parser, &event) || event.type == YAML_SEQUENCE_START_EVENT /* currently unsupported, TODO */) {
+            printf("Config parse error: %d\n", parser.error);
             goto end;
         }
 
-        switch(event.type)
-        { 
-            case YAML_NO_EVENT: puts("No event!"); break;
-            /* Stream start/end */
-            case YAML_STREAM_START_EVENT: puts("STREAM START"); break;
-            case YAML_STREAM_END_EVENT:   puts("STREAM END");   break;
-            /* Block delimeters */
-            case YAML_DOCUMENT_START_EVENT: puts("<b>Start Document</b>"); break;
-            case YAML_DOCUMENT_END_EVENT:   puts("<b>End Document</b>");   break;
-            case YAML_SEQUENCE_START_EVENT: puts("<b>Start Sequence</b>"); break;
-            case YAML_SEQUENCE_END_EVENT:   puts("<b>End Sequence</b>");   break;
-            case YAML_MAPPING_START_EVENT:  puts("<b>Start Mapping</b>");  break;
-            case YAML_MAPPING_END_EVENT:    puts("<b>End Mapping</b>");    break;
-            /* Data */
-            case YAML_ALIAS_EVENT:  printf("Got alias (anchor %s)\n", event.data.alias.anchor); break;
-            case YAML_SCALAR_EVENT: printf("Got scalar (value %s)\n", event.data.scalar.value); break;
+        if (event.type == YAML_SCALAR_EVENT) {
+            type_ptr = key == NULL ? &key : &value;
+
+            *type_ptr = (char *) malloc(strlen(event.data.scalar.value) + 1);
+            strcpy(*type_ptr, event.data.scalar.value);
+
+            if (value != NULL) {
+                g_hash_table_insert(config, key, value);
+                key = value = NULL;
+            }
         }
     } while(event.type != YAML_STREAM_END_EVENT);
 
     end:
         yaml_event_delete(&event);
+}
+
+char * config_get(char *key)
+{
+    return g_hash_table_lookup(config, key);
 }

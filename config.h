@@ -1,3 +1,4 @@
 #include <yaml.h>
 
-void parse(void);
+void config_parse(void);
+char * config_get(char *key);
