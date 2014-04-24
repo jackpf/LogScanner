@@ -10,6 +10,7 @@
 #define TAG_PID         2
 
 static ln_callback _callback = NULL;
+static long int f_offset = 0;
 
 void filesystem_set_ln_callback(ln_callback callback)
 {
@@ -18,6 +19,8 @@ void filesystem_set_ln_callback(ln_callback callback)
 
 static bool process_line(char *line)
 {
+    static char *last_date;
+
     const char *pattern = "\\[(.*?)\\]";
     const char *error;
     int error_offset;
@@ -63,6 +66,13 @@ static bool process_line(char *line)
         sprintf(capture, "%.*s", substring_length, substring_start);
 
         switch (tag) {
+            case TAG_DATE:
+                if (last_date != NULL && strcmp(capture, last_date) == 0) {
+                    return false; // Always skip since we're probably just in a massive stack trace
+                }
+                last_date = (char *) malloc(strlen(capture) + 1);
+                strcpy(last_date, capture); // TODO: Get rid of microseconds
+            break;
             case TAG_TYPE:
                 if (strcmp(capture, ":error") == 0) {
                     snd = true;
@@ -77,15 +87,17 @@ static bool process_line(char *line)
 static void process_file(char *filename)
 {
     if (!file_exists(filename)) {
-        printf("File does not exist\n");
+        printf("File %s does not exist\n", filename);
         exit(-1);
     }
 
     FILE *fh = fopen(filename, "rt");
+    fseek(fh, f_offset, SEEK_SET);
 
     char line[BUFSIZ];
 
     while (fgets(line, BUFSIZ, fh) != NULL) {
+        f_offset = ftell(fh);
         if (process_line(line)) {
             if (_callback != NULL) {
                 _callback(line);
@@ -96,12 +108,23 @@ static void process_file(char *filename)
     fclose (fh);
 }
 
+static void init_f_offset(char *filename)
+{
+    FILE *fh = fopen(filename, "rt");
+    fseek(fh, 0, SEEK_END);
+    f_offset = ftell(fh);
+    fclose(fh);
+}
+
 void filesystem_watch_file(char *filename)
 {
     if (!file_exists(filename)) {
-        printf("File does not exist\n");
+        printf("File %s does not exist\n", filename);
         exit(-1);
     }
+
+    // Set offset to the end of the file so we'll start checking errors for new entries only
+    init_f_offset(filename);
 
     int length;
     int fd, wd;
@@ -114,7 +137,7 @@ void filesystem_watch_file(char *filename)
         exit(-1);
     }
 
-    wd = inotify_add_watch(fd, filename, IN_CLOSE_WRITE);
+    wd = inotify_add_watch(fd, filename, IN_MODIFY);
 
     printf("Watching %s...\n", filename);
 
@@ -129,7 +152,7 @@ void filesystem_watch_file(char *filename)
 
         for (int i = 0; i < length;) {
             struct inotify_event *event = (struct inotify_event *) &buffer[i];
-            if (event->mask & IN_CLOSE_WRITE) {
+            if (event->mask & IN_MODIFY) {
                 process_file(filename);
             }
 
