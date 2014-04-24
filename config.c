@@ -3,8 +3,13 @@
 
 GHashTable *config;
 
-void config_init(void)
+void config_init(char *config_file)
 {
+    if (!file_exists(config_file)) {
+        printf("Config file %s does not exist\n", config_file);
+        exit(-1);
+    }
+
     config = g_hash_table_new(g_str_hash, g_str_equal);
     yaml_parser_t parser;
     yaml_event_t event;
@@ -13,7 +18,7 @@ void config_init(void)
     yaml_parser_initialize(&parser);
 
     /* Set a file input. */
-    FILE *input = fopen("/home/s40admin/installs/LogScanner/config.yml", "rb");
+    FILE *input = fopen(config_file, "rb");
 
     yaml_parser_set_input_file(&parser, input);
 
@@ -44,5 +49,10 @@ void config_init(void)
 
 char * config_get(char *key)
 {
+    if (!g_hash_table_contains(config, key)) {
+        printf("Config value for %s not set\n", key);
+        exit(-1);
+    }
+
     return g_hash_table_lookup(config, key);
 }
