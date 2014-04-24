@@ -5,13 +5,26 @@
 #define EVENT_SIZE      (sizeof (struct inotify_event))
 #define EVENT_BUF_LEN   (1024 * (EVENT_SIZE + 16))
 
-void process_line(char *line)
+#define TAG_DATE        0
+#define TAG_TYPE        1
+#define TAG_PID         2
+
+ln_callback _callback = NULL;
+
+void filesystem_set_ln_callback(ln_callback callback)
+{
+    _callback = callback;
+}
+
+bool process_line(char *line)
 {
     const char *pattern = "\\[(.*?)\\]";
     const char *error;
     int error_offset;
     pcre *re;
     int rc;
+    int ovector[REGEX_GROUPS * 3];
+    bool snd = false;
 
     re = pcre_compile(
         pattern,
@@ -26,16 +39,13 @@ void process_line(char *line)
         exit(-1);
     }
 
-    // Format: [date] [tag] [pid] ...
-    for (int i = 0; true; i++) {
-        int ovector[REGEX_GROUPS * 3];
-
+    for (int tag = 0; true; tag++) {
         rc = pcre_exec(
             re,
             NULL,
             line,
             strlen(line),
-            i == 0 ? 0 : ovector[1],
+            tag == 0 ? 0 : ovector[1],
             0,
             ovector,
             REGEX_GROUPS * 3
@@ -48,8 +58,20 @@ void process_line(char *line)
         int group = 1; // Group to capture
         char *substring_start = line + ovector[2 * group];
         int substring_length = ovector[2 * group + 1] - ovector[2 * group];
-        printf("%2d: %.*s\n", group, substring_length, substring_start);
+
+        char *capture = (char *) malloc(substring_length + 1);
+        sprintf(capture, "%.*s", substring_length, substring_start);
+
+        switch (tag) {
+            case TAG_TYPE:
+                if (strcmp(capture, ":error") == 0) {
+                    snd = true;
+                }
+            break;
+        }
     }
+
+    return snd;
 }
 
 void process_file(char *filename)
@@ -64,13 +86,17 @@ void process_file(char *filename)
     char line[BUFSIZ];
 
     while (fgets(line, BUFSIZ, fh) != NULL) {
-        process_line(line);
+        if (process_line(line)) {
+            if (_callback != NULL) {
+                _callback(line);
+            }
+        }
     }
 
     fclose (fh);
 }
 
-void watch_file(char *filename, void (*callback)(char *))
+void filesystem_watch_file(char *filename)
 {
     if (!file_exists(filename)) {
         printf("File does not exist\n");
@@ -104,9 +130,7 @@ void watch_file(char *filename, void (*callback)(char *))
         for (int i = 0; i < length;) {
             struct inotify_event *event = (struct inotify_event *) &buffer[i];
             if (event->mask & IN_CLOSE_WRITE) {
-                printf("File modified!\n");
-
-                (*callback)(filename);
+                process_file(filename);
             }
 
             i += EVENT_SIZE + event->len;

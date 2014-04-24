@@ -20,7 +20,7 @@ size_t curl_write(void *ptr, size_t size, size_t nmemb, struct string *s)
     return size * nmemb;
 }
 
-pushover_h pushover_send(char *token, char *user, char *message)
+bool pushover_send(char *token, char *user, char *message)
 {
     CURL *ch;
     CURLcode res;
@@ -43,13 +43,12 @@ pushover_h pushover_send(char *token, char *user, char *message)
 
     if (res != CURLE_OK) {
         printf("Curl error: %s\n", curl_easy_strerror(res));
-        return -1;
+        return false;
     }
-    printf("Request sent\n");
-    printf("Return data: %s\n", return_data.ptr);
+
     free(return_data.ptr);
 
     curl_easy_cleanup(ch);
 
-    return 0;
+    return true;
 }

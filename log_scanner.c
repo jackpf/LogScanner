@@ -15,13 +15,25 @@ char * get_arg(int argc, char **argv, char *key)
     exit(-1);
 }
 
+void error_line(char *line)
+{
+    printf("New error found!\n");
+
+    if (pushover_send(config_get("pushover_token"), config_get("pushover_user"), line)) {
+        printf("Notification sent\n");
+    } else {
+        printf("Error sending notification\n");
+    }
+}
+
 int main(int argc, char **argv)
 {
     config_init(get_arg(argc, argv, "--config-file"));
 
     //pushover_send(config_get("pushover_token"), config_get("pushover_user"), "LogScanner startup :D");
 
-    watch_file(config_get("file"), &process_file);
+    filesystem_set_ln_callback(&error_line);
+    filesystem_watch_file(config_get("file"));
 
     return 0;
 }
