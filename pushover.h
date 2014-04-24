@@ -6,7 +6,8 @@
 
 typedef int pushover_h;
 
-struct string {
+struct string
+{
     char *ptr;
     size_t len;
 };
