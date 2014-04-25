@@ -145,19 +145,6 @@ static void init_f_offset(char *filename)
     fclose(fh);
 }
 
-void filesystem_watch_file_retry(char *filename)
-{
-    printf("Retrying to watch %s\n", filename);
-
-    for (int i = 1; i <= MAX_RETRY_ATTEMPTS && !filesystem_watch_file(filename); i++) {
-        printf("Retry attempt %d\n", i);
-        sleep(5);
-    }
-
-    printf("Max retry attempts reached, exiting\n");
-    exit(-1);
-}
-
 bool filesystem_watch_file(char *filename)
 {
     if (!file_exists(filename)) {
@@ -175,7 +162,7 @@ bool filesystem_watch_file(char *filename)
     fd = inotify_init();
 
     if (fd < 0) {
-        printf("Inotify returned %d", fd);
+        printf("Inotify returned %d\n", fd);
         return false;
     }
 
@@ -198,22 +185,14 @@ bool filesystem_watch_file(char *filename)
             if (event->mask & IN_MODIFY) {
                 printf("File modified\n");
                 process_file(filename);
-            } else if (event->mask & IN_MOVE_SELF) {
-                printf("File moved\n");
+            } else if (event->mask & IN_MOVE_SELF || event->mask & IN_DELETE_SELF) {
+                printf("File moved/deleted\n");
 
                 // Cleanup old handles
                 inotify_rm_watch(fd, wd);
                 close(fd);
 
-                filesystem_watch_file_retry(filename);
-            } else if (event->mask & IN_DELETE_SELF) {
-                printf("File deleted\n");
-                
-                // Cleanup old handles
-                inotify_rm_watch(fd, wd);
-                close(fd);
-
-                filesystem_watch_file_retry(filename);
+                return false;
             } else {
                 printf("Uncaught inotify event mask: %d\n", event->mask);
             }
@@ -221,9 +200,6 @@ bool filesystem_watch_file(char *filename)
             i += EVENT_SIZE + event->len;
         }
     }
-
-    inotify_rm_watch(fd, wd);
-    close(fd);
 
     return true;
 }

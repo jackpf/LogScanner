@@ -22,7 +22,6 @@ void error_line(char *line)
     pushover_data data = new_pushover_data;
     data.title = config_get("server_name");
     data.message = extract_error_message(line);
-    data.priority = 1;
 
     if (pushover_send(config_get("pushover_token"), config_get("pushover_user"), data)) {
         printf("Notification sent\n");
@@ -35,12 +34,19 @@ int main(int argc, char **argv)
 {
     config_init(get_arg(argc, argv, "--config-file"));
 
-    //pushover_send(config_get("pushover_token"), config_get("pushover_user"), "LogScanner startup :D");
-
     filesystem_set_ln_callback(&error_line);
-    if (!filesystem_watch_file(config_get("file"))) {
-        exit(-1);
+
+    for (int i = 1; i <= 10 /* max retry attempts */ && !filesystem_watch_file(config_get("file")); i++) {
+        printf("Retry attempt %d\n", i);
+        sleep(5);
     }
+
+    pushover_data data = new_pushover_data;
+    data.title = "LogScanner Error";
+    data.message = "An error has occured while attempting to watch files";
+
+    pushover_send(config_get("pushover_token"), config_get("pushover_user"), data);
+    printf("%s\n", data.message);
 
     return 0;
 }

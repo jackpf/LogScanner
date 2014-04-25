@@ -1,7 +1,7 @@
 #include "common.h"
 #include "pushover.h"
 
-const struct pushover_data_s new_pushover_data = {"", "", "", "", "", 0, ""};
+const struct pushover_data_s new_pushover_data = {"", "", "", "", "", 1, ""};
 
 static void init_string(write_string *s)
 {
