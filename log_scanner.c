@@ -19,8 +19,10 @@ void error_line(char *line)
 {
     printf("New error found!\n");
 
-    pushover_data data;
+    pushover_data data = new_pushover_data;
+    data.title = config_get("server_name");
     data.message = extract_error_message(line);
+    data.priority = 1;
 
     if (pushover_send(config_get("pushover_token"), config_get("pushover_user"), data)) {
         printf("Notification sent\n");

@@ -1,6 +1,8 @@
 #include "common.h"
 #include "pushover.h"
 
+const struct pushover_data_s new_pushover_data = {"", "", "", "", "", 0, ""};
+
 static void init_string(write_string *s)
 {
     s->len = 0;
@@ -25,8 +27,8 @@ bool pushover_send(char *token, char *user, pushover_data data)
     CURL *ch;
     CURLcode res;
  
-    char request_data[snprintf(NULL, 0, PUSHOVER_REQ, token, user, data.message)];
-    sprintf(request_data, PUSHOVER_REQ, token, user, data.message);
+    char request_data[snprintf(NULL, 0, PUSHOVER_REQ, token, user, data.title, data.message, data.device, data.url, data.url_title, data.priority, data.sound)];
+    sprintf(request_data, PUSHOVER_REQ, token, user, data.title, data.message, data.device, data.url, data.url_title, data.priority, data.sound);
     write_string return_data;
     init_string(&return_data);
 
