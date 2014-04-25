@@ -1,14 +1,14 @@
 #include "common.h"
 #include "pushover.h"
 
-static void init_string(struct string *s)
+static void init_string(write_string *s)
 {
     s->len = 0;
     s->ptr = malloc(s->len + 1);
     s->ptr[0] = '\0';
 }
 
-static size_t curl_write(void *ptr, size_t size, size_t nmemb, struct string *s)
+static size_t curl_write(void *ptr, size_t size, size_t nmemb, write_string *s)
 {
     size_t new_len = s->len + size * nmemb;
     s->ptr = realloc(s->ptr, new_len + 1);
@@ -20,14 +20,14 @@ static size_t curl_write(void *ptr, size_t size, size_t nmemb, struct string *s)
     return size * nmemb;
 }
 
-bool pushover_send(char *token, char *user, char *message)
+bool pushover_send(char *token, char *user, pushover_data data)
 {
     CURL *ch;
     CURLcode res;
  
-    char *request_data = (char *) malloc(strlen(PUSHOVER_REQ) + strlen(token) + strlen(user) + strlen(message) + 1);
-    sprintf(request_data, PUSHOVER_REQ, token, user, message);
-    struct string return_data;
+    char request_data[snprintf(NULL, 0, PUSHOVER_REQ, token, user, data.message)];
+    sprintf(request_data, PUSHOVER_REQ, token, user, data.message);
+    write_string return_data;
     init_string(&return_data);
 
     curl_global_init(CURL_GLOBAL_ALL);

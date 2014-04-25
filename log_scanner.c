@@ -19,11 +19,14 @@ void error_line(char *line)
 {
     printf("New error found!\n");
 
-    /*if (pushover_send(config_get("pushover_token"), config_get("pushover_user"), line)) {
+    pushover_data data;
+    data.message = extract_error_message(line);
+
+    if (pushover_send(config_get("pushover_token"), config_get("pushover_user"), data)) {
         printf("Notification sent\n");
     } else {
         printf("Error sending notification\n");
-    }*/
+    }
 }
 
 int main(int argc, char **argv)

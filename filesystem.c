@@ -17,6 +17,35 @@ void filesystem_set_ln_callback(ln_callback callback)
     _callback = callback;
 }
 
+char * extract_error_message(char *line)
+{
+    char *pch = strtok(line, "]"), *last, *end;
+
+    while (pch != NULL) {
+        last = pch;
+        pch = strtok(NULL, "]");
+    }
+
+    while(isspace(*last)) last++;
+
+    if(*last == 0)  // All spaces?
+        return last;
+
+    // Trim trailing space
+    end = last + strlen(last) - 1;
+    while (end > last && isspace(*end)) end--;
+
+    // Write new null terminator
+    *(end + 1) = 0;
+
+    return last;
+}
+
+static char * extract_comparable_date(char *date)
+{
+    return strtok(date, ".");
+}
+
 static bool process_line(char *line)
 {
     static char *last_date;
@@ -67,7 +96,7 @@ static bool process_line(char *line)
 
         switch (tag) {
             case TAG_DATE:
-                if (last_date != NULL && strcmp(capture, last_date) == 0) {
+                if (last_date != NULL && strcmp(extract_comparable_date(capture), extract_comparable_date(last_date)) == 0) {
                     return false; // Always skip since we're probably just in a massive stack trace
                 }
                 last_date = (char *) malloc(strlen(capture) + 1);

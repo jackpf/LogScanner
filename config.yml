@@ -1,3 +1,4 @@
 file: /var/log/apache2/vhost_error.log
 pushover_token: acTqt782nbMAf66EfbU26c31C5a9Za
 pushover_user: uBMhxDWbb1tTcg2yigX2DQMLDjCSwA
+server_name: "Localhost"
