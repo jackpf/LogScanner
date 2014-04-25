@@ -38,7 +38,9 @@ int main(int argc, char **argv)
     //pushover_send(config_get("pushover_token"), config_get("pushover_user"), "LogScanner startup :D");
 
     filesystem_set_ln_callback(&error_line);
-    filesystem_watch_file(config_get("file"));
+    if (!filesystem_watch_file(config_get("file"))) {
+        exit(-1);
+    }
 
     return 0;
 }

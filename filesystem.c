@@ -145,11 +145,24 @@ static void init_f_offset(char *filename)
     fclose(fh);
 }
 
-void filesystem_watch_file(char *filename)
+void filesystem_watch_file_retry(char *filename)
+{
+    printf("Retrying to watch %s\n", filename);
+
+    for (int i = 1; i <= MAX_RETRY_ATTEMPTS && !filesystem_watch_file(filename); i++) {
+        printf("Retry attempt %d\n", i);
+        sleep(5);
+    }
+
+    printf("Max retry attempts reached, exiting\n");
+    exit(-1);
+}
+
+bool filesystem_watch_file(char *filename)
 {
     if (!file_exists(filename)) {
         printf("File %s does not exist\n", filename);
-        exit(-1);
+        return false;
     }
 
     // Set offset to the end of the file so we'll start checking errors for new entries only
@@ -163,10 +176,10 @@ void filesystem_watch_file(char *filename)
 
     if (fd < 0) {
         printf("Inotify returned %d", fd);
-        exit(-1);
+        return false;
     }
 
-    wd = inotify_add_watch(fd, filename, IN_MODIFY);
+    wd = inotify_add_watch(fd, filename, IN_MODIFY | IN_MOVE_SELF | IN_DELETE_SELF);
 
     printf("Watching %s...\n", filename);
 
@@ -181,8 +194,28 @@ void filesystem_watch_file(char *filename)
 
         for (int i = 0; i < length;) {
             struct inotify_event *event = (struct inotify_event *) &buffer[i];
+
             if (event->mask & IN_MODIFY) {
+                printf("File modified\n");
                 process_file(filename);
+            } else if (event->mask & IN_MOVE_SELF) {
+                printf("File moved\n");
+
+                // Cleanup old handles
+                inotify_rm_watch(fd, wd);
+                close(fd);
+
+                filesystem_watch_file_retry(filename);
+            } else if (event->mask & IN_DELETE_SELF) {
+                printf("File deleted\n");
+                
+                // Cleanup old handles
+                inotify_rm_watch(fd, wd);
+                close(fd);
+
+                filesystem_watch_file_retry(filename);
+            } else {
+                printf("Uncaught inotify event mask: %d\n", event->mask);
             }
 
             i += EVENT_SIZE + event->len;
@@ -190,6 +223,7 @@ void filesystem_watch_file(char *filename)
     }
 
     inotify_rm_watch(fd, wd);
-
     close(fd);
+
+    return true;
 }

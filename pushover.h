@@ -23,4 +23,4 @@ struct pushover_data_s
 typedef struct pushover_data_s pushover_data;
 extern const struct pushover_data_s new_pushover_data;
 
-bool pushover_send(char *token, char *user, pushover_data data);
+bool pushover_send(char *, char *, pushover_data);

@@ -5,4 +5,4 @@
 #include <glib.h>
 #include <unistd.h>
 
-bool file_exists(char *filename);
+bool file_exists(char *);
