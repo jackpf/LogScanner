@@ -1,7 +1,9 @@
 LogScanner
 ==========
 
-This is a simple service for linux to monitor PHP log files in real time and send a pushover notification when a new error is detected.
+This is a simple service for linux to monitor Apache log files in real time and send a pushover notification when a new PHP error is detected.
+
+In order to make you must have glib, pcre and yaml libraries installed.
 
 To install and set to run on startup:
 
