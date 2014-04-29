@@ -12,6 +12,7 @@ make
 sudo cp ./bin/log-scanner /usr/sbin/
 sudo cp ./scripts/init.d/log-scanner /etc/init.d/
 sudo cp ./scripts/default/log-scanner /etc/default/
+sudo update-rc.d log-scanner-defaults
 mkdir ~/.config/log-scanner
 cp ./config/config.yml ~/.config/log-scanner/
 ```
