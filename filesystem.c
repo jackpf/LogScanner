@@ -2,7 +2,7 @@
 #include "filesystem.h"
 
 #define REGEX_GROUPS    (2)
-#define EVENT_SIZE      (sizeof (struct inotify_event))
+#define EVENT_SIZE      (sizeof(struct inotify_event))
 #define EVENT_BUF_LEN   (1024 * (EVENT_SIZE + 16))
 
 #define TAG_DATE        0
@@ -17,7 +17,7 @@ void filesystem_set_ln_callback(ln_callback callback)
     _callback = callback;
 }
 
-char * extract_error_message(char *line)
+char *extract_error_message(char *line)
 {
     char *pch = strtok(line, "]"), *last, *end;
 
@@ -41,7 +41,7 @@ char * extract_error_message(char *line)
     return last;
 }
 
-static char * extract_comparable_date(char *date)
+static char *extract_comparable_date(char *date)
 {
     return strtok(date, ".");
 }

@@ -3,7 +3,7 @@
 #include "config.h"
 #include "pushover.h"
 
-char * get_arg(int argc, char **argv, char *key)
+char *get_arg(int argc, char **argv, char *key)
 {
     for (int i = 0; i < argc; i++) {
         if (strcmp(argv[i], key) == 0 && argc - 1 >= i + 1) {

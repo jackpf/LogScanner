@@ -47,7 +47,7 @@ void config_init(char *config_file)
         yaml_event_delete(&event);
 }
 
-char * config_get(char *key)
+char *config_get(char *key)
 {
     if (!g_hash_table_contains(config, key)) {
         printf("Config value for %s not set\n", key);
